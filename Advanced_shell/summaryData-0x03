@@ -1,0 +1,34 @@
+#!/bin/bash
+
+INPUT_DIR="pokemon_data"
+OUTPUT_FILE="pokemon_report.csv"
+
+if [ ! -d "$INPUT_DIR" ]; then
+    echo "Error: $INPUT_DIR not found."
+    exit 1
+fi
+
+# CSV Header
+echo "Name,Height (m),Weight (kg)" > "$OUTPUT_FILE"
+
+# Extract name, height, weight
+for file in "$INPUT_DIR"/*.json; do
+    name=$(jq -r '.name' "$file" | sed 's/.*/\u&/')
+    height_dm=$(jq -r '.height' "$file")
+    weight_hg=$(jq -r '.weight' "$file")
+    height_m=$(awk "BEGIN {printf \"%.2f\", $height_dm/10}")
+    weight_kg=$(awk "BEGIN {printf \"%.2f\", $weight_hg/10}")
+    echo "$name,$height_m,$weight_kg" >> "$OUTPUT_FILE"
+done
+
+echo "CSV Report generated at: $OUTPUT_FILE"
+echo ""
+cat "$OUTPUT_FILE"
+echo ""
+
+# Averages
+awk -F, 'NR>1 {sum_h+=$2; sum_w+=$3; c++}
+END {
+    printf "Average Height: %.2f m\n", sum_h/c
+    printf "Average Weight: %.2f kg\n", sum_w/c
+}' "$OUTPUT_FILE"
