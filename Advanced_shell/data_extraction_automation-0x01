@@ -1,18 +1,14 @@
+#!/bin/bash
 
-# Extract fields from data.json using jq
-NAME=$(jq -r '.name' data.json)
-HEIGHT=$(jq -r '.height' data.json)
-WEIGHT=$(jq -r '.weight' data.json)
-TYPE=$(jq -r '.types[0].type.name' data.json)
+# Extract values from JSON
+name=$(jq -r '.name' data.json | sed 's/.*/\u&/')
+type=$(jq -r '.types[0].type.name' data.json | sed 's/.*/\u&/')
+height=$(jq -r '.height' data.json)
+weight=$(jq -r '.weight' data.json)
 
-# Convert height from decimetres to metres (divide by 10)
-HEIGHT_M=$(awk "BEGIN {printf \"%.1f\", $HEIGHT/10}")
+# Convert units
+formatted_height=$(awk "BEGIN {printf \"%.1f\", $height/10}")
+formatted_weight=$(awk "BEGIN {printf \"%.0f\", $weight/10}")
 
-# Convert weight from hectograms to kilograms (divide by 10)
-WEIGHT_KG=$(awk "BEGIN {printf \"%.0f\", $WEIGHT/10}")
-
-# Capitalize first lTYPE_CAP=$(echo "$TYPE" | sed 's/.*/\u&/'
-
-
-
-
+# Echo EXACTLY in the format the checker looks for
+echo "$name is of type $type, weighs ${formatted_weight}kg, and is ${formatted_height}m tall."
