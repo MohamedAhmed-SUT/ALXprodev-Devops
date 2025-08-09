@@ -13,3 +13,34 @@ for pokemon in "${POKEMON_LIST[@]}"; do
     echo "Saved data to pokemon_data/${pokemon}.json ✅"
     sleep 2  # Delay to avoid rate-limiting
 done
+#!/bin/bash
+
+POKEMONS=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
+OUTPUT_DIR="pokemon_data"
+ERROR_FILE="errors.txt"
+
+mkdir -p "$OUTPUT_DIR"
+: > "$ERROR_FILE"  # clear old errors
+
+for pokemon in "${POKEMONS[@]}"; do
+    echo "Fetching data for $pokemon..."
+    success=false
+
+    for attempt in {1..3}; do
+        if curl -s -f "https://pokeapi.co/api/v2/pokemon/${pokemon,,}" -o "$OUTPUT_DIR/${pokemon,,}.json"; then
+            echo "Saved data to $OUTPUT_DIR/${pokemon,,}.json ✅"
+            success=true
+            break
+        else
+            echo "Attempt $attempt failed for $pokemon. Retrying..."
+            sleep 2
+        fi
+    done
+
+    if [ "$success" = false ]; then
+        echo "Failed to fetch data for $pokemon after 3 attempts" | tee -a "$ERROR_FILE"
+    fi
+
+    # Avoid rate limit: 1 second delay after each request (even success)
+    sleep 1
+done
