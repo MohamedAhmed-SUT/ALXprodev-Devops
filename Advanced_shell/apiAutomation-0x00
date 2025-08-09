@@ -1,0 +1,14 @@
+#!/bin/bash
+
+OUTPUT_FILE="data.json"
+ERROR_FILE="errors.txt"
+API_URL="https://pokeapi.co/api/v2/pokemon/pikachu"
+
+HTTP_STATUS=$(curl -s -o "$OUTPUT_FILE" -w "%{http_code}" "$API_URL")
+
+if [ "$HTTP_STATUS" -ne 200 ]; then
+    echo "[$(date)] API request failed with status $HTTP_STATUS" >> "$ERROR_FILE"
+    exit 1
+fi
+
+echo "Data successfully saved to $OUTPUT_FILE"
