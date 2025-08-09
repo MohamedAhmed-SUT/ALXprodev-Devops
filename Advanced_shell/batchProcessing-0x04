@@ -5,7 +5,7 @@ OUTPUT_DIR="pokemon_data_parallel"
 ERROR_FILE="errors_parallel.txt"
 
 mkdir -p "$OUTPUT_DIR"
-: > "$ERROR_FILE"  # clear previous error log
+: > "$ERROR_FILE"  # clear old error log
 
 fetch_pokemon() {
     local pokemon="$1"
@@ -17,12 +17,28 @@ fetch_pokemon() {
     fi
 }
 
-# Launch all fetches in background
+# Track PIDs of background processes
+PIDS=()
+
 for pokemon in "${POKEMONS[@]}"; do
     fetch_pokemon "$pokemon" &
+    PIDS+=($!)
 done
 
-# Wait for all background jobs to finish
-wait
+# Wait with timeout and kill if needed
+TIMEOUT=15  # seconds per batch
+START_TIME=$(date +%s)
 
-echo "All Pokémon data fetched!"
+for pid in "${PIDS[@]}"; do
+    while kill -0 "$pid" 2>/dev/null; do
+        NOW=$(date +%s)
+        if (( NOW - START_TIME > TIMEOUT )); then
+            echo "Process $pid timed out. Killing..."
+            kill "$pid" 2>/dev/null
+            break
+        fi
+        sleep 1
+    done
+done
+
+echo "All Pokémon data fetch attempts finished!"
